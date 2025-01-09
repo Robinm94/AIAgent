@@ -1,7 +1,8 @@
 import { runllm } from './llm'
-import { getMessages, addMessage } from './memory'
+import { getMessages, addMessage, saveToolResponse } from './memory'
 import type { AIMessage } from '../types'
 import { showLoader, logMessage } from './ui'
+import { runTool } from './toolRunner'
 
 export const runAgent = async ({
   userMessage,
@@ -17,18 +18,24 @@ export const runAgent = async ({
   const history = await getMessages()
   const response = await runllm({ messages: history, tools })
 
-  //   if (response.tool_calls) {
-  //     console.log(response.tool_calls)
-  //   }
-
   await addMessage([response])
 
-  if (response.role === 'assistant' && response.content) {
+  if (response.tool_calls) {
+    const toolCall = response.tool_calls[0]
+    loader.update(`Tool Executing: ${toolCall.function.name}`)
+    const toolResponse = await runTool(toolCall, userMessage)
+    await saveToolResponse(toolCall.id, toolResponse)
+    loader.update(`Tool Executed: ${toolCall.function.name}`)
+  }
+
+  if (
+    (response.role === 'assistant' || response.role === 'tool') &&
+    response.content
+  ) {
     loader.succeed()
   } else {
     loader.fail()
   }
   logMessage(response)
-
   return response
 }
