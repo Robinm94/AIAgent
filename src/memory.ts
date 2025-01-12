@@ -46,7 +46,7 @@ export const saveToolResponse = async (
   toolCallID: string,
   toolResponse: string
 ) => {
-  addMessage([
+  await addMessage([
     { role: 'tool', content: toolResponse, tool_call_id: toolCallID },
   ])
 }

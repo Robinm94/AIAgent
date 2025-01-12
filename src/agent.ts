@@ -15,27 +15,26 @@ export const runAgent = async ({
 
   const loader = showLoader('Thinking...')
 
-  const history = await getMessages()
-  const response = await runllm({ messages: history, tools })
+  while (true) {
+    const history = await getMessages()
+    const response = await runllm({ messages: history, tools })
 
-  await addMessage([response])
+    await addMessage([response])
 
-  if (response.tool_calls) {
-    const toolCall = response.tool_calls[0]
-    loader.update(`Tool Executing: ${toolCall.function.name}`)
-    const toolResponse = await runTool(toolCall, userMessage)
-    await saveToolResponse(toolCall.id, toolResponse)
-    loader.update(`Tool Executed: ${toolCall.function.name}`)
+    if (response.role === 'assistant' && response.content) {
+      loader.update(`Got Response`)
+      loader.succeed()
+      logMessage(response)
+      return response
+    }
+
+    if (response.tool_calls) {
+      // logMessage(response)
+      const toolCall = response.tool_calls[0]
+      loader.update(`Tool Executing: ${toolCall.function.name}`)
+      const toolResponse = await runTool(toolCall, userMessage)
+      await saveToolResponse(toolCall.id, toolResponse)
+      loader.update(`Tool Executed: ${toolCall.function.name}`)
+    }
   }
-
-  if (
-    (response.role === 'assistant' || response.role === 'tool') &&
-    response.content
-  ) {
-    loader.succeed()
-  } else {
-    loader.fail()
-  }
-  logMessage(response)
-  return response
 }
