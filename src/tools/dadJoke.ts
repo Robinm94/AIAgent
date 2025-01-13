@@ -8,6 +8,8 @@ export const dadJokeToolDefinition = {
   parameters: z.object({}),
 }
 
+// This is the type of the arguments that the tool function will receive
+// It is inferred from the `parameters` property of the tool definition
 type Args = z.infer<(typeof dadJokeToolDefinition)['parameters']>
 
 export const dadJokeTool: ToolFn<Args, string> = async ({ toolArgs }) => {
