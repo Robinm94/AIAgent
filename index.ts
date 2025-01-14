@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import { runAgent } from './src/agent'
 import { z } from 'zod'
+import { tools } from './src/tools'
 const userMessage = process.argv[2]
 
 if (!userMessage) {
@@ -8,14 +9,6 @@ if (!userMessage) {
   process.exit(1)
 }
 
-const weatherTool = {
-  name: 'get_weather',
-  description: 'Get the weather. Does not need any location information.',
-  parameters: z.object({
-    reasoning: z.string().describe('Why did you pick this tool?'),
-  }),
-}
-
-await runAgent({ userMessage, tools: [weatherTool] })
+await runAgent({ userMessage, tools })
 
 // console.log(response)
